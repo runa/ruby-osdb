@@ -39,8 +39,16 @@ module XMLRPC
         # does not assume that we don't want keepalive
         @http.start if not @http.started?
 
+        retries = 0 
         # post request
-        resp = @http.request_post(@path, request, header)
+        begin
+          resp = @http.request_post(@path, request, header)
+        rescue EOFError
+          retries += 1
+          sleep 0.1
+          retry if retries < 4
+          raise
+        end
       end
 
       @http_last_response = resp
